@@ -8,6 +8,7 @@ import (
 
 	"github.com/fuglesteg/valheim-server-sleeper/verboseLog"
 )
+// TODO: Rename vars and functions/methods to fit naming scheme
 
 type Proxy struct {
     // Connection used by clients as the proxy server
@@ -29,7 +30,7 @@ type Proxy struct {
 type connection struct {
 	ClientAddr *net.UDPAddr // Address of the client
 	ServerConn *net.UDPConn // UDP connection to server
-    LastUsed   *time.Time
+        LastUsed   *time.Time
 }
 
 func (connection *connection) UpdateLastUsed() {
@@ -39,7 +40,7 @@ func (connection *connection) UpdateLastUsed() {
 
 func (proxy *Proxy)CleanUnusedConnections() {
     for _, connection := range proxy.clientDict {
-        timeoutReached := time.Since(*connection.LastUsed).Seconds() > proxy.timeOutDelay.Seconds() // Gives wrong time if not using seconds
+        timeoutReached := time.Since(*connection.LastUsed) > proxy.timeOutDelay
         if (timeoutReached) {
             delete(proxy.clientDict, connection.ClientAddr.String())
         }
@@ -54,11 +55,11 @@ func (proxy *Proxy)GetConnectionsAmount() int {
 func newConnection(srvAddr, cliAddr *net.UDPAddr) *connection {
 	conn := new(connection)
 	conn.ClientAddr = cliAddr
-	srvudp, err := net.DialUDP("udp", nil, srvAddr)
+	srvUdp, err := net.DialUDP("udp", nil, srvAddr)
 	if verboseLog.Checkreport(1, err) {
 		return nil
 	}
-	conn.ServerConn = srvudp
+	conn.ServerConn = srvUdp
 	return conn
 }
 
