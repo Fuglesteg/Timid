@@ -1,8 +1,8 @@
 package main
 
 import (
-	"flag"
-	"fmt"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/fuglesteg/valheim-server-sleeper/docker"
@@ -10,77 +10,95 @@ import (
 	"github.com/fuglesteg/valheim-server-sleeper/verboseLog"
 )
 
-/* TODO: Control docker container, starts when player connects,
-/* shut down when no users are connected*/
+// TODO: Add ability to choose if container should be paused or shutdown
+// NOTE: Should there be an option to stop container if paused for long enough?
+// TODO: Experiment with proxy buffering packets until container starts
 
 var proxyServer *proxy.Proxy
+var dockerController *docker.DockerController = docker.NewDockerController()
+var container = dockerController.NewContainer("valheim-valheim-1")
+var containerProcedureRunning = false
+var containerShutdownDelay, _ = time.ParseDuration("1m")
+var targetAddress = "localhost:2456"
+var proxyPort = 8080
 
 func main() {
-	var iverb *int = flag.Int("v", 1, "Verbosity (0-6)")
-	flag.Parse()
-	verboseLog.Verbosity = *iverb
+        initEnvVariables()
 
-    proxyPort := 8080
-    targetAddress := "localhost:2456"
-
-	verboseLog.Vlogf(3, "Proxy port = %d, Server address = %s\n",
+	verboseLog.Vlogf(3, "Proxy port = %d, Target address = %s\n",
 		proxyPort, targetAddress)
 
-    timeoutDelay, _ := time.ParseDuration("2m");
-    containerShutdownDelay, _ := time.ParseDuration("1m")
-    proxyServer, err := proxy.NewProxy(proxyPort, targetAddress, timeoutDelay)
-    if err != nil {
-        verboseLog.Checkreport(5, err)
-    }
-    proxyServer.Start()
-    dockerController := docker.NewDockerController()
-    container := dockerController.NewContainer("valheim-valheim-1")
-    containerProcedureRunning := false
+	timeoutDelay, _ := time.ParseDuration("1m")
+	proxyServer, err := proxy.NewProxy(proxyPort, targetAddress, timeoutDelay)
+	if err != nil {
+		verboseLog.Checkreport(5, err)
+	}
+	proxyServer.Start()
 
-    shutdownContainerIfNoConnections := func() {
-        connectionsAmount := proxyServer.GetConnectionsAmount()
-        noConnections := connectionsAmount <= 0
-        if !noConnections {
-            return
-        }
-        if containerProcedureRunning {
-            return
-        }
-        if !dockerController.ContainerIsRunning(container) {
-            return 
-        }
-        go func() {
-            fmt.Println("Starting container shutdown timer")
-            containerProcedureRunning = true
-            defer func() {containerProcedureRunning = false}()
-            time.Sleep(containerShutdownDelay)
-            if proxyServer.GetConnectionsAmount() > 0 {
-                return
-            }
-            fmt.Println("stopping container")
-            dockerController.StopContainer(container)
-        }()
-    }
+	for {
+		time.Sleep(1 * time.Second)
+		proxyServer.CleanUnusedConnections()
+		shutdownContainerIfNoConnections()
+		startContainerIfConnections()
+	}
+}
 
-    startContainerIfConnections := func() {
-        connectionsExist := proxyServer.GetConnectionsAmount() > 0
-        if !connectionsExist {
-            return
+func initEnvVariables() {
+        proxyPortEnv, err := strconv.Atoi(os.Getenv("PROXY_PORT"))
+        if err == nil {
+            proxyPort = proxyPortEnv
         }
-        if containerProcedureRunning {
-            return
+        targetAddressEnv := os.Getenv("PROXY_TARGET_ADDRESS")
+        if targetAddressEnv != "" {
+            targetAddress = targetAddressEnv
         }
-        if dockerController.ContainerIsRunning(container) {
-            return 
+        containerShutdownDelayEnv, err := time.ParseDuration(os.Getenv("PROXY_CONTAINER_SHUTDOWN_DELAY"))
+        if err == nil {
+            containerShutdownDelay = containerShutdownDelayEnv
         }
-        dockerController.StartContainer(container)
-    }
+        verbosity, err := strconv.Atoi(os.Getenv("PROXY_LOG_VERBOSITY"))
+        if err == nil {
+            verboseLog.Verbosity = verbosity
+        }
+}
 
-    for {
-        time.Sleep(1 * time.Second)
-        proxyServer.CleanUnusedConnections()
-        fmt.Println(proxyServer.GetConnectionsAmount())
-        shutdownContainerIfNoConnections();
-        startContainerIfConnections();
-    }
+func startContainerIfConnections() {
+	connectionsExist := proxyServer.GetConnectionsAmount() > -1
+	if !connectionsExist {
+		return
+	}
+	if containerProcedureRunning {
+		return
+	}
+	if dockerController.ContainerIsRunning(container) {
+		return
+	}
+	dockerController.StartContainer(container)
+}
+
+func shutdownContainerIfNoConnections() {
+	connectionsAmount := proxyServer.GetConnectionsAmount()
+	noConnections := connectionsAmount <= 0
+	if !noConnections {
+		return
+	}
+	if containerProcedureRunning {
+		return
+	}
+	if !dockerController.ContainerIsRunning(container) {
+		return
+	}
+	go func() {
+		verboseLog.Vlogf(1, "Starting container shutdown timer")
+		containerProcedureRunning = true
+		defer func() { containerProcedureRunning = false }()
+		verboseLog.Vlogf(1, "Shutting down container after delay of " +
+			containerShutdownDelay.String())
+		time.Sleep(containerShutdownDelay)
+		if proxyServer.GetConnectionsAmount() > 0 {
+			return
+		}
+		verboseLog.Vlogf(1, "stopping container")
+		dockerController.StopContainer(container)
+	}()
 }

@@ -9,49 +9,49 @@ import (
 	"github.com/fuglesteg/valheim-server-sleeper/verboseLog"
 )
 
-type docker struct {
+type DockerController struct {
 	client *client.Client
 }
 
-func NewDockerController() *docker {
+func NewDockerController() *DockerController {
 	client, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		verboseLog.Checkreport(1, err)
 	}
-	dockerController := new(docker)
+	dockerController := new(DockerController)
 	dockerController.client = client
 	return dockerController
 }
 
-func (controller *docker) StopContainer(container *container) {
+func (controller *DockerController) StopContainer(container *container) {
     err := controller.client.ContainerKill(context.Background(), container.ID, "SIGTERM")   
     if err != nil {
         verboseLog.Checkreport(1, err)
     }
 }
 
-func (controller *docker) PauseContainer(container *container) {
+func (controller *DockerController) PauseContainer(container *container) {
     err := controller.client.ContainerPause(context.Background(), container.ID)
     if err != nil {
         verboseLog.Checkreport(1, err)
     }
 }
 
-func (controller *docker) UnpauseContainer(container *container) {
+func (controller *DockerController) UnpauseContainer(container *container) {
     err := controller.client.ContainerUnpause(context.Background(), container.ID) 
     if err != nil {
         verboseLog.Checkreport(1, err)
     }
 }
 
-func (controller *docker) StartContainer(container *container) {
+func (controller *DockerController) StartContainer(container *container) {
     err := controller.client.ContainerStart(context.Background(), container.ID, types.ContainerStartOptions{})
     if err != nil {
         verboseLog.Checkreport(1, err)
     }
 }
 
-func (controller *docker) ContainerIsRunning(container *container) bool{
+func (controller *DockerController) ContainerIsRunning(container *container) bool{
     info, err := controller.client.ContainerInspect(context.Background(), container.ID)    
     if err != nil {
         verboseLog.Checkreport(1, err)
@@ -59,7 +59,7 @@ func (controller *docker) ContainerIsRunning(container *container) bool{
     return info.State.Running
 }
 
-func (controller *docker) NewContainer(containerName string) *container {
+func (controller *DockerController) NewContainer(containerName string) *container {
     filterArgs := filters.NewArgs(
         filters.Arg("name", containerName),
     )
