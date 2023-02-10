@@ -2,7 +2,7 @@ package verboseLog
 
 import "log"
 
-var Verbosity int = 6
+var Verbosity int = 1
 
 // Log result if verbosity level high enough
 func Vlogf(level int, format string, v ...interface{}) {

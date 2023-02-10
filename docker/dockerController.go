@@ -6,7 +6,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
-	"github.com/fuglesteg/valheim-server-sleeper/verboseLog"
+	"github.com/fuglesteg/timid/verboseLog"
 )
 
 type DockerController struct {
@@ -23,35 +23,35 @@ func NewDockerController() *DockerController {
 	return dockerController
 }
 
-func (controller *DockerController) StopContainer(container *container) {
+func (controller *DockerController) StopContainer(container *Container) {
     err := controller.client.ContainerKill(context.Background(), container.ID, "SIGTERM")   
     if err != nil {
         verboseLog.Checkreport(1, err)
     }
 }
 
-func (controller *DockerController) PauseContainer(container *container) {
+func (controller *DockerController) PauseContainer(container *Container) {
     err := controller.client.ContainerPause(context.Background(), container.ID)
     if err != nil {
         verboseLog.Checkreport(1, err)
     }
 }
 
-func (controller *DockerController) UnpauseContainer(container *container) {
+func (controller *DockerController) UnpauseContainer(container *Container) {
     err := controller.client.ContainerUnpause(context.Background(), container.ID) 
     if err != nil {
         verboseLog.Checkreport(1, err)
     }
 }
 
-func (controller *DockerController) StartContainer(container *container) {
+func (controller *DockerController) StartContainer(container *Container) {
     err := controller.client.ContainerStart(context.Background(), container.ID, types.ContainerStartOptions{})
     if err != nil {
         verboseLog.Checkreport(1, err)
     }
 }
 
-func (controller *DockerController) ContainerIsRunning(container *container) bool{
+func (controller *DockerController) ContainerIsRunning(container *Container) bool{
     info, err := controller.client.ContainerInspect(context.Background(), container.ID)    
     if err != nil {
         verboseLog.Checkreport(1, err)
@@ -59,7 +59,7 @@ func (controller *DockerController) ContainerIsRunning(container *container) boo
     return info.State.Running
 }
 
-func (controller *DockerController) NewContainer(containerName string) *container {
+func (controller *DockerController) NewContainer(containerName string) (*Container, error) {
     filterArgs := filters.NewArgs(
         filters.Arg("name", containerName),
     )
@@ -67,8 +67,8 @@ func (controller *DockerController) NewContainer(containerName string) *containe
     containers, err := 
         controller.client.ContainerList(context.Background(), listOptions)
     if err != nil {
-        verboseLog.Checkreport(1, err)
+        return nil, err
     }
-    container := &container{Name: containerName, ID: containers[0].ID}
-    return container
+    container := &Container{Name: containerName, ID: containers[0].ID}
+    return container, nil
 }

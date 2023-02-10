@@ -6,78 +6,57 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fuglesteg/valheim-server-sleeper/verboseLog"
+	"github.com/fuglesteg/timid/verboseLog"
 )
+
 // TODO: Rename vars and functions/methods to fit naming scheme
 
 type Proxy struct {
-    // Connection used by clients as the proxy server
-    proxyConn *net.UDPConn
+	// Connection used by clients as the proxy server
+	proxyConn *net.UDPConn
 
-    // Address of server
-    serverAddr *net.UDPAddr
+	// Address of server
+	serverAddr *net.UDPAddr
 
-    // Mapping from client addresses (as host:port) to connection
-    clientDict map[string]*connection
+	// Mapping from client addresses (as host:port) to connection
+	clientDict map[string]*connection
 
-    // Mutex used to serialize access to the dictionary
-    dmutex *sync.Mutex
+	// Mutex used to serialize access to the dictionary
+	dmutex *sync.Mutex
 
-    timeOutDelay time.Duration
-}
-
-// Information maintained for each client/server connection
-type connection struct {
-	ClientAddr *net.UDPAddr // Address of the client
-	ServerConn *net.UDPConn // UDP connection to server
-        LastUsed   *time.Time
-}
-
-func (connection *connection) UpdateLastUsed() {
-    timeNow := time.Now()
-    connection.LastUsed = &timeNow
-}
-
-func (proxy *Proxy)CleanUnusedConnections() {
-    for _, connection := range proxy.clientDict {
-        timeoutReached := time.Since(*connection.LastUsed) > proxy.timeOutDelay
-        if (timeoutReached) {
-            delete(proxy.clientDict, connection.ClientAddr.String())
-        }
-    }
-}
-
-func (proxy *Proxy)GetConnectionsAmount() int {
-    return len(proxy.clientDict)
-}
-
-// Generate a new connection by opening a UDP connection to the server
-func newConnection(srvAddr, cliAddr *net.UDPAddr) *connection {
-	conn := new(connection)
-	conn.ClientAddr = cliAddr
-	srvUdp, err := net.DialUDP("udp", nil, srvAddr)
-	if verboseLog.Checkreport(1, err) {
-		return nil
-	}
-	conn.ServerConn = srvUdp
-	return conn
+	timeOutDelay time.Duration
 }
 
 func NewProxy(proxyPort int, targetAddress string, connectionTimeoutDelay time.Duration) (proxy *Proxy, err error) {
-    proxy = new(Proxy)
-    proxy.clientDict = make(map[string]*connection)
-    proxy.dmutex = new(sync.Mutex)
-    proxy.timeOutDelay = connectionTimeoutDelay
-    err = proxy.setup(proxyPort, targetAddress)
+	proxy = new(Proxy)
+	proxy.clientDict = make(map[string]*connection)
+	proxy.dmutex = new(sync.Mutex)
+	proxy.timeOutDelay = connectionTimeoutDelay
+	err = proxy.setup(proxyPort, targetAddress)
 
-    return proxy, err
+	return proxy, err
 }
 
-func (proxy *Proxy)Start() {
-    go proxy.runProxy()
+func (proxy *Proxy) CleanUnusedConnections() {
+	for _, connection := range proxy.clientDict {
+		timeoutReached := time.Since(*connection.LastUsed) > proxy.timeOutDelay
+		if timeoutReached {
+			delete(proxy.clientDict, connection.ClientAddr.String())
+			verboseLog.Vlogf(2, "Removed unused connection for client: %s",
+				connection.ClientAddr.String())
+		}
+	}
 }
 
-func (proxy *Proxy)setup(port int, hostport string) error {
+func (proxy *Proxy) GetConnectionsAmount() int {
+	return len(proxy.clientDict)
+}
+
+func (proxy *Proxy) Start() {
+	go proxy.RunProxy()
+}
+
+func (proxy *Proxy) setup(port int, hostport string) error {
 	// Set up Proxy
 	saddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf(":%d", port))
 	if verboseLog.Checkreport(1, err) {
@@ -100,16 +79,16 @@ func (proxy *Proxy)setup(port int, hostport string) error {
 	return nil
 }
 
-func (proxy *Proxy)dlock() {
+func (proxy *Proxy) dlock() {
 	proxy.dmutex.Lock()
 }
 
-func (proxy *Proxy)dunlock() {
+func (proxy *Proxy) dunlock() {
 	proxy.dmutex.Unlock()
 }
 
 // Go routine which manages connection from server to single client
-func (proxy *Proxy)runConnection(conn *connection) {
+func (proxy *Proxy) runConnection(conn *connection) {
 	var buffer [1500]byte
 	for {
 		// Read from server
@@ -122,39 +101,39 @@ func (proxy *Proxy)runConnection(conn *connection) {
 		if verboseLog.Checkreport(1, err) {
 			continue
 		}
-        conn.UpdateLastUsed()
+		conn.UpdateLastUsed()
 		verboseLog.Vlogf(3, "Relayed '%s' from server to %s.\n",
 			string(buffer[0:n]), conn.ClientAddr.String())
 	}
 }
 
 // Routine to handle inputs to Proxy port
-func (proxy *Proxy)runProxy() {
+func (proxy *Proxy) RunProxy() {
 	var buffer [1500]byte
 	for {
-		n, cliaddr, err := proxy.proxyConn.ReadFromUDP(buffer[0:])
+		n, clientAddr, err := proxy.proxyConn.ReadFromUDP(buffer[0:])
 		if verboseLog.Checkreport(1, err) {
 			continue
 		}
 		verboseLog.Vlogf(3, "Read '%s' from client %s\n",
-			string(buffer[0:n]), cliaddr.String())
-		saddr := cliaddr.String()
+			string(buffer[0:n]), clientAddr.String())
+		clientAddressString := clientAddr.String()
 		proxy.dlock()
-		conn, found := proxy.clientDict[saddr]
+		conn, found := proxy.clientDict[clientAddressString]
 		if !found {
-			conn = newConnection(proxy.serverAddr, cliaddr)
+			conn = newConnection(proxy.serverAddr, clientAddr)
 			if conn == nil {
 				proxy.dunlock()
 				continue
 			}
-			proxy.clientDict[saddr] = conn
-            conn.UpdateLastUsed()
+			proxy.clientDict[clientAddressString] = conn
+			conn.UpdateLastUsed()
 			proxy.dunlock()
-			verboseLog.Vlogf(2, "Created new connection for client %s\n", saddr)
+			verboseLog.Vlogf(2, "Created new connection for client %s\n", clientAddressString)
 			// Fire up routine to manage new connection
 			go proxy.runConnection(conn)
 		} else {
-			verboseLog.Vlogf(5, "Found connection for client %s\n", saddr)
+			verboseLog.Vlogf(5, "Found connection for client %s\n", clientAddressString)
 			proxy.dunlock()
 		}
 		// Relay to server

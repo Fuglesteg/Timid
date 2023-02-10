@@ -1,6 +1,6 @@
 package docker
 
-type container struct {
+type Container struct {
 	Name string
 	ID   string
 }
