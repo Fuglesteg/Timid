@@ -25,7 +25,7 @@ Timid is available as a docker image, this is the recommended way of running tim
 Container image is available at https://hub.docker.com/r/fuglesteg/timid
 Remember that the docker capabilites of timid require access to the docker daemon
 this is achieved by mounting the docker.sock file to the container, see the example 
-[compose.yml](#docker compose) file.
+[compose.yml](#docker-compose) file.
 
 ## Requirements
 To run the application without docker you require golang and git.
@@ -74,10 +74,10 @@ The Timid container will listen to connections and start the valheim container u
 |PROXY_PORT| Port on host computer the program should listen to|Integer| Unset & required |
 |PROXY_TARGET_ADDRESS| Address to reroute traffic to, can be name of docker container running on the same network| String\|/URL| Unset & required |
 |PROXY_CONTAINER_NAME| Name of container running service, the container that will be shutdown and started based on number of connections| String| Unset & required |
-|PROXY_CONTAINER_SHUTDOWN_DELAY| Time until the proxy shuts down the container after no connections exist| <a href="#duration string">Duration string</a>| 1 minute |
+|PROXY_CONTAINER_SHUTDOWN_DELAY| Time until the proxy shuts down the container after no connections exist| <a href="#duration-string">Duration string</a>| 1 minute |
 |<s>PROXY_PAUSE_CONTAINER</s>| Unimplemented, will make the proxy pause the container instead of stopping it| Boolean| false |
 |PROXY_LOG_VERBOSITY| How verbose should the logs be| Integer, Range 1-6| 1 |
-|PROXY_CONNECTION_TIMEOUT_DELAY| UDP has no concept of a connection, so this tracks how long a connection must be unused for it to be considered disconnected| <a href="#duration string">Duration string</a> | 1 minute |
+|PROXY_CONNECTION_TIMEOUT_DELAY| UDP has no concept of a connection, so this tracks how long a connection must be unused for it to be considered disconnected| <a href="#duration-string">Duration string</a> | 1 minute |
 
 ### [ Duration string ](https://pkg.go.dev/time#ParseDuration)
 "A duration string is a possibly signed sequence of decimal numbers, each with optional fraction and a unit suffix, such as "300ms", "-1.5h" or "2h45m". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"."
