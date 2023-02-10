@@ -19,17 +19,18 @@ The concept of disabling unused servers is not new, and this project was mainly 
 The code for the UDP proxy is mainly based on this [gist](https://gist.github.com/mike-zhang/3853251) by [mike-zhang](https://github.com/mike-zhang) 
 
 # Installation
-Timid is available as a docker image, this is the recommended way of running timid
+Timid is available as a docker image, this is the recommended way of running timid.
 
 ## Container image
 Container image is available at https://hub.docker.com/r/fuglesteg/timid
 Remember that the docker capabilites of timid require access to the docker daemon
 this is achieved by mounting the docker.sock file to the container, see the example 
-[compose.yml](#Docker compose) file
+[compose.yml](#Docker compose) file.
 
 ## Requirements
-To run the application without docker you require golang and git
-Download the repo and run `go install`{:.bash} then `bash go run`{:.bash}
+To run the application without docker you require golang and git.
+
+Download the repo and run ```go install``` then ```go run```.
 
 # Usage
 ## Docker compose
@@ -63,7 +64,8 @@ services:
 
 Note that because the containers are running on the same docker network they are able to communicate.
 The docker local DNS resolves the hostname of valheim to the container.
-This docker compose setup will start both servers and 
+This docker compose setup will start both containers and if no connections are made the valheim container will stop.
+The Timid container will listen to connections and start the valheim container up again if a connection is made.
 
 ## Configuration
 
