@@ -22,7 +22,8 @@ The code for the UDP proxy is mainly based on this [gist](https://gist.github.co
 Timid is available as a docker image, this is the recommended way of running Timid.
 
 ## Container image
-Container image is available at https://hub.docker.com/r/fuglesteg/timid
+Container image is available at https://hub.docker.com/r/fuglesteg/timid.
+
 Remember that the docker capabilites of Timid require access to the docker daemon
 this is achieved by mounting the docker.sock file to the container, see the example 
 [compose.yml](#docker-compose) file.
