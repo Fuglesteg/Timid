@@ -29,7 +29,7 @@ this is achieved by mounting the docker.sock file to the container, see the exam
 
 ## Requirements
 To run the application without docker you require golang and git
-Download the repo and run `go install`{:.bash} then `bash go run`{:.bash}
+Download the repo and run ```go install``` then ```go run```
 
 # Usage
 ## Docker compose
