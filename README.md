@@ -3,27 +3,27 @@
 Timid is a UDP proxy that tracks connections and stops and starts docker containers.
 Developed to be used with game servers that need to save resources.
 The container will start as soon as a connection attempt is made to the server, and will shut down
-if no connections exist for a customizable amount of time.
+if no connections exist for a customizable amount of idle time.
 ## Motivation
 The use case for Timid was running game servers that don't need to be instantly accessible,
 but should still be available.
 
 I run a small server where I sometimes host game servers for friends, since the server
-doesn't have many resources and I don't want to manually control whar servers are running, as that
-loses the advantage of having a dedicated server.
+doesn't have many resources and I don't want to manually control what servers are running, as that
+loses the advantage of having a dedicated server, I found a need for a tool like Timid.
 Idle game servers can sometimes use an unexpected amount of resources and that is why 
 the use case for Timid emerged.
 
 The concept of disabling unused servers is not new, and this project was mainly inspired by 
-[Infrared](https://github.com/haveachin/infrared).
+[Infrared](https://github.com/haveachin/infrared), which has all the same capabilites as Timid (and more) for minecraft servers (which are TCP based).
 The code for the UDP proxy is mainly based on this [gist](https://gist.github.com/mike-zhang/3853251) by [mike-zhang](https://github.com/mike-zhang) 
 
 # Installation
-Timid is available as a docker image, this is the recommended way of running timid.
+Timid is available as a docker image, this is the recommended way of running Timid.
 
 ## Container image
 Container image is available at https://hub.docker.com/r/fuglesteg/timid
-Remember that the docker capabilites of timid require access to the docker daemon
+Remember that the docker capabilites of Timid require access to the docker daemon
 this is achieved by mounting the docker.sock file to the container, see the example 
 [compose.yml](#docker-compose) file.
 
