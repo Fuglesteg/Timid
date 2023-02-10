@@ -50,7 +50,7 @@ services:
       - "./server/config:/config"
       - "./server/data:/opt/valheim"
   timid:
-    image: timid
+    image: fuglesteg/timid
     restart: always
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
