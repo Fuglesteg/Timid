@@ -40,6 +40,7 @@ using valheim:
 ```yaml
 version: '3.4'
 
+name: valheim # Set project name
 services:
   valheim:
     image: lloesche/valheim-server
@@ -60,7 +61,7 @@ services:
     environment:
       PROXY_PORT: 2456
       PROXY_TARGET_ADDRESS: valheim:2456
-      PROXY_CONTAINER_NAME: valheim-valheim-1 # dependent on the project being name valheim
+      PROXY_CONTAINER_NAME: valheim-valheim-1 # need to specify container name prefixed by project name and suffixed by container instance number (usually 1).
 ```
 
 Note that because the containers are running on the same docker network they are able to communicate.
