@@ -95,7 +95,12 @@ func startContainerIfConnections(proxy *proxy.Proxy) {
 		return
 	}
 	verboseLog.Vlogf(1, "Detected connection, starting container")
-	dockerController.StartContainer(container)
+
+	if dockerController.ContainerIsPaused(container) {
+		dockerController.UnpauseContainer(container)
+	} else {
+		dockerController.StartContainer(container)
+	}
 }
 
 func shutdownContainerIfNoConnections(proxy *proxy.Proxy) {
@@ -108,6 +113,9 @@ func shutdownContainerIfNoConnections(proxy *proxy.Proxy) {
 		return
 	}
 	if !dockerController.ContainerIsRunning(container) {
+		return
+	}
+	if dockerController.ContainerIsPaused(container) {
 		return
 	}
 	go func() {
@@ -123,7 +131,14 @@ func shutdownContainerIfNoConnections(proxy *proxy.Proxy) {
 		if !dockerController.ContainerIsRunning(container) {
 			return
 		}
+		if dockerController.ContainerIsPaused(container) {
+			return
+		}
 		verboseLog.Vlogf(1, "Stopping container")
-		dockerController.StopContainer(container)
+		if pauseContainer {
+			dockerController.PauseContainer(container)
+		} else {
+			dockerController.StopContainer(container)
+		}
 	}()
 }
