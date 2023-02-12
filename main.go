@@ -120,6 +120,9 @@ func shutdownContainerIfNoConnections(proxy *proxy.Proxy) {
 		if proxy.GetConnectionsAmount() > 0 {
 			return
 		}
+		if !dockerController.ContainerIsRunning(container) {
+			return
+		}
 		verboseLog.Vlogf(1, "Stopping container")
 		dockerController.StopContainer(container)
 	}()
