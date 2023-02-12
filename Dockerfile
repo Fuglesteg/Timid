@@ -1,5 +1,5 @@
 # FROM golang:1.19.5
-FROM ubuntu
+FROM ubuntu AS build
 
 RUN apt-get update && apt-get -y upgrade && apt-get -y install ca-certificates golang git
 
@@ -13,6 +13,12 @@ COPY . .
 
 RUN go build .
 
-COPY timid /usr/local/bin
+FROM alpine
 
-ENTRYPOINT ["timid"]
+RUN apk --no-cache add ca-certificates gcompat
+
+WORKDIR /usr/local/bin
+
+COPY --from=build /usr/src/app/timid ./
+
+CMD ["./timid"]
