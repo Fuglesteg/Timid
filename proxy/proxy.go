@@ -67,7 +67,7 @@ func (proxy *Proxy) setup(port int, hostport string) error {
 		return err
 	}
 	proxy.proxyConn = pudp
-	verboseLog.Vlogf(2, "Proxy serving on port %d\n", port)
+	verboseLog.Vlogf(1, "Proxy serving on port %d\n", port)
 
 	// Get server address
 	srvaddr, err := net.ResolveUDPAddr("udp", hostport)
@@ -75,7 +75,7 @@ func (proxy *Proxy) setup(port int, hostport string) error {
 		return err
 	}
 	proxy.serverAddr = srvaddr
-	verboseLog.Vlogf(2, "Connected to server at %s\n", hostport)
+	verboseLog.Vlogf(1, "Connected to server at %s\n", hostport)
 	return nil
 }
 
