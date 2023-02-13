@@ -1,0 +1,7 @@
+export PROXY_PORT=8080
+export PROXY_PAUSE_CONTAINER=true
+export PROXY_CONTAINER_NAME="web-serv-test"
+export PROXY_TARGET_ADDRESS="google.com:8080"
+export PROXY_CONTAINER_SHUTDOWN_DELAY="5s"
+export PROXY_LOG_VERBOSITY=5
+# export PROXY
