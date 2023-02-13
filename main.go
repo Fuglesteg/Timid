@@ -12,6 +12,8 @@ import (
 
 // TODO: Implement option for containers to shut down if paused for long enough
 // TODO: Experiment with proxy buffering packets until container starts
+// TODO: Support multiple containers
+// TODO: Support multiple ports
 
 var proxyServer *proxy.Proxy
 var dockerController *docker.DockerController
@@ -20,23 +22,23 @@ var containerProcedureRunning = false
 var oneMinuteDuration, _ = time.ParseDuration("1m")
 
 var (
-	pauseContainerKey = envInit.EnvKey("PROXY_PAUSE_CONTAINER")
+	pauseContainerKey = envInit.EnvKey("TIMID_PAUSE_CONTAINER")
 	pauseContainer    bool
 
-	containerShutdownDelayKey = envInit.EnvKey("PROXY_CONTAINER_SHUTDOWN_DELAY")
+	containerShutdownDelayKey = envInit.EnvKey("TIMID_CONTAINER_SHUTDOWN_DELAY")
 	containerShutdownDelay    time.Duration
 
-	targetAddressKey = envInit.EnvKey("PROXY_TARGET_ADDRESS")
+	targetAddressKey = envInit.EnvKey("TIMID_TARGET_ADDRESS")
 	targetAddress    string
 
-	proxyPortKey = envInit.EnvKey("PROXY_PORT")
+	proxyPortKey = envInit.EnvKey("TIMID_PORT")
 	proxyPort    int
 
-	connectionTimeoutDelayKey = envInit.EnvKey("PROXY_CONNECTION_TIMEOUT_DELAY")
+	connectionTimeoutDelayKey = envInit.EnvKey("TIMID_CONNECTION_TIMEOUT_DELAY")
 	connectionTimeoutDelay    time.Duration
 
-	verbosityKey     = envInit.EnvKey("PROXY_LOG_VERBOSITY")
-	containerNameKey = envInit.EnvKey("PROXY_CONTAINER_NAME")
+	verbosityKey     = envInit.EnvKey("TIMID_LOG_VERBOSITY")
+	containerNameKey = envInit.EnvKey("TIMID_CONTAINER_NAME")
 )
 
 func main() {
@@ -90,7 +92,7 @@ func initEnvVariables() {
 	if err != nil {
 		panic(fmt.Errorf("Failed to set proxy target address and/or listening port: %s", err))
 	}
-	verboseLog.Verbosity, err = verbosityKey.GetEnvIntOrFallback(2)
+	verboseLog.Verbosity, err = verbosityKey.GetEnvIntOrFallback(1)
 	if err != nil {
 		verboseLog.Checkreport(4, fmt.Errorf("Logging verbosity not set: %w", err))
 	}

@@ -59,9 +59,9 @@ services:
     ports:
       - "2456-2458:2456-2458/udp"
     environment:
-      PROXY_PORT: 2456
-      PROXY_TARGET_ADDRESS: valheim:2456
-      PROXY_CONTAINER_NAME: valheim-valheim-1 # need to specify container name prefixed by project name and suffixed by container instance number (usually 1).
+      TIMID_PORT: 2456
+      TIMID_TARGET_ADDRESS: valheim:2456
+      TIMID_CONTAINER_NAME: valheim-valheim-1 # need to specify container name prefixed by project name and suffixed by container instance number (usually 1).
 ```
 
 Note that because the containers are running on the same docker network they are able to communicate.
@@ -73,13 +73,13 @@ The Timid container will listen to connections and start the valheim container u
 
 |Environment variable| Purpose | Type | Default Value |
 |---|---|---|---|
-|PROXY_PORT| Port on host computer the program should listen to|Integer| Unset & required |
-|PROXY_TARGET_ADDRESS| Address to reroute traffic to, can be name of docker container running on the same network| String\|/URL| Unset & required |
-|PROXY_CONTAINER_NAME| Name of container running service, the container that will be shutdown and started based on number of connections| String| Unset & required |
-|PROXY_CONTAINER_SHUTDOWN_DELAY| Time until the proxy shuts down the container after no connections exist| <a href="#duration-string">Duration string</a>| 1 minute |
-|<s>PROXY_PAUSE_CONTAINER</s>| Unimplemented, will make the proxy pause the container instead of stopping it| Boolean| false |
-|PROXY_LOG_VERBOSITY| How verbose should the logs be| Integer, Range 1-6| 1 |
-|PROXY_CONNECTION_TIMEOUT_DELAY| UDP has no concept of a connection, so this tracks how long a connection must be unused for it to be considered disconnected| <a href="#duration-string">Duration string</a> | 1 minute |
+|TIMID_PORT| Port on host computer the program should listen to|Integer| Unset & required |
+|TIMID_TARGET_ADDRESS| Address to reroute traffic to, can be name of docker container running on the same network| String\|/URL| Unset & required |
+|TIMID_CONTAINER_NAME| Name of container running service, the container that will be shutdown and started based on number of connections| String| Unset & required |
+|TIMID_CONTAINER_SHUTDOWN_DELAY| Time until the proxy shuts down the container after no connections exist| <a href="#duration-string">Duration string</a>| 1 minute |
+|<s>TIMID_PAUSE_CONTAINER</s>| Unimplemented, will make the proxy pause the container instead of stopping it| Boolean| false |
+|TIMID_LOG_VERBOSITY| How verbose should the logs be| Integer, Range 1-6| 1 |
+|TIMID_CONNECTION_TIMEOUT_DELAY| UDP has no concept of a connection, so this tracks how long a connection must be unused for it to be considered disconnected| <a href="#duration-string">Duration string</a> | 1 minute |
 
 ### [Duration string](https://pkg.go.dev/time#ParseDuration)
 "A duration string is a possibly signed sequence of decimal numbers, each with optional fraction and a unit suffix, such as "300ms", "-1.5h" or "2h45m". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"."
