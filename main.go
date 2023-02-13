@@ -10,28 +10,41 @@ import (
 	"github.com/fuglesteg/timid/verboseLog"
 )
 
-// TODO: Add ability to choose if container should pause or shut down
-// NOTE: Should there be an option to stop container if paused for long enough?
+// TODO: Implement option for containers to shut down if paused for long enough
 // TODO: Experiment with proxy buffering packets until container starts
 
 var proxyServer *proxy.Proxy
 var dockerController *docker.DockerController
 var container *docker.Container
 var containerProcedureRunning = false
+var oneMinuteDuration, _ = time.ParseDuration("1m")
 
 var (
-	pauseContainer            = false
-	containerShutdownDelay, _ = time.ParseDuration("1m")
-	targetAddress             string
-	proxyPort                 int
-	connectionTimeoutDelay, _ = time.ParseDuration("1m")
+	pauseContainerKey = envInit.EnvKey("PROXY_PAUSE_CONTAINER")
+	pauseContainer    bool
+
+	containerShutdownDelayKey = envInit.EnvKey("PROXY_CONTAINER_SHUTDOWN_DELAY")
+	containerShutdownDelay    time.Duration
+
+	targetAddressKey = envInit.EnvKey("PROXY_TARGET_ADDRESS")
+	targetAddress    string
+
+	proxyPortKey = envInit.EnvKey("PROXY_PORT")
+	proxyPort    int
+
+	connectionTimeoutDelayKey = envInit.EnvKey("PROXY_CONNECTION_TIMEOUT_DELAY")
+	connectionTimeoutDelay    time.Duration
+
+	verbosityKey     = envInit.EnvKey("PROXY_LOG_VERBOSITY")
+	containerNameKey = envInit.EnvKey("PROXY_CONTAINER_NAME")
 )
 
 func main() {
+	verboseLog.Vlogf(1, "Starting...")
 	initDockerController()
 	initEnvVariables()
 
-	verboseLog.Vlogf(3, "Proxy port = %d, Target address = %s\n",
+	verboseLog.Vlogf(1, "Proxy port = %d, Target address = %s\n",
 		proxyPort, targetAddress)
 
 	proxyServer, err := proxy.NewProxy(proxyPort, targetAddress, connectionTimeoutDelay)
@@ -49,12 +62,11 @@ func main() {
 			}
 		}()
 	}
-
 	proxyServer.RunProxy()
 }
 
 func initDockerController() {
-	containerName, err := envInit.GetEnvString("PROXY_CONTAINER_NAME")
+	containerName, err := containerNameKey.GetEnvString()
 	if err != nil {
 		err = fmt.Errorf("Docker functionality disabled: %s", err)
 		verboseLog.Checkreport(1, err)
@@ -65,22 +77,27 @@ func initDockerController() {
 	if err != nil {
 		panic(fmt.Errorf("Failed to initialize Docker functionality: %s", err))
 	}
-	err = envInit.SetEnvDuration("PROXY_CONTAINER_SHUTDOWN_DELAY", &containerShutdownDelay)
+	containerShutdownDelay, err = containerShutdownDelayKey.GetEnvDurationOrFallback(oneMinuteDuration)
 	verboseLog.Checkreport(4, fmt.Errorf("Container shutdown delay not set: %s", err))
-	err = envInit.SetEnvBool("PROXY_PAUSE_CONTAINER", &pauseContainer)
+	pauseContainer, err = pauseContainerKey.GetEnvBoolOrFallback(false)
 	verboseLog.Checkreport(4, fmt.Errorf("Docker controller will never pause a container: %s", err))
 }
 
 func initEnvVariables() {
-	err := envInit.SetEnvInt("PROXY_PORT", &proxyPort)
-	err = envInit.SetEnvString("PROXY_TARGET_ADDRESS", &targetAddress)
+	var err error
+	proxyPort, err = proxyPortKey.GetEnvInt()
+	targetAddress, err = targetAddressKey.GetEnvString()
 	if err != nil {
 		panic(fmt.Errorf("Failed to set proxy target address and/or listening port: %s", err))
 	}
-	err = envInit.SetEnvInt("PROXY_LOG_VERBOSITY", &verboseLog.Verbosity)
-	verboseLog.Checkreport(4, fmt.Errorf("Logging verbosity not set: %s", err))
-	err = envInit.SetEnvDuration("PROXY_CONNECTION_TIMEOUT_DELAY", &connectionTimeoutDelay)
-	verboseLog.Checkreport(4, fmt.Errorf("Proxy connection timeout delay not set: %s", err))
+	verboseLog.Verbosity, err = verbosityKey.GetEnvIntOrFallback(2)
+	if err != nil {
+		verboseLog.Checkreport(4, fmt.Errorf("Logging verbosity not set: %w", err))
+	}
+	connectionTimeoutDelay, err = connectionTimeoutDelayKey.GetEnvDurationOrFallback(oneMinuteDuration)
+	if err != nil {
+		verboseLog.Checkreport(4, fmt.Errorf("Proxy connection timeout delay not set: %w", err))
+	}
 }
 
 func startContainerIfConnections(proxy *proxy.Proxy) {
@@ -119,7 +136,6 @@ func shutdownContainerIfNoConnections(proxy *proxy.Proxy) {
 		return
 	}
 	go func() {
-		verboseLog.Vlogf(1, "Starting container shutdown timer")
 		containerProcedureRunning = true
 		defer func() { containerProcedureRunning = false }()
 		verboseLog.Vlogf(1, "Shutting down container after delay of %s",
@@ -134,7 +150,7 @@ func shutdownContainerIfNoConnections(proxy *proxy.Proxy) {
 		if dockerController.ContainerIsPaused(container) {
 			return
 		}
-		verboseLog.Vlogf(1, "Stopping container")
+		verboseLog.Vlogf(1, "Stopping container %s", container.Name)
 		if pauseContainer {
 			dockerController.PauseContainer(container)
 		} else {
