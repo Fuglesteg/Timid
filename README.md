@@ -16,7 +16,10 @@ the use case for Timid emerged.
 
 The concept of disabling unused servers is not new, and this project was mainly inspired by 
 [Infrared](https://github.com/haveachin/infrared), which has all the same capabilites as Timid (and more) for minecraft servers (which are TCP based).
-The code for the UDP proxy is mainly based on this [gist](https://gist.github.com/mike-zhang/3853251) by [mike-zhang](https://github.com/mike-zhang) 
+The code for the UDP proxy is mainly based on this [gist](https://gist.github.com/mike-zhang/3853251) by [mike-zhang](https://github.com/mike-zhang).
+
+There also exists a project that is very similar to Timid and might fit your usecase better, [Lazytainer](https://github.com/vmorganp/Lazytainer) 
+is an older project than timid and has the ability to control more than one container using groups, it can also listen on multiple ports
 
 # Installation
 Timid is available as a docker image, this is the recommended way of running Timid.
@@ -87,6 +90,6 @@ The Timid container will listen to connections and start the valheim container u
 \- [go documentation](https://pkg.go.dev/time#ParseDuration)
 
 # TODO
-- [ ] Implement option of pausing container instead of stopping it
-- [ ] Implement option of pausing container when inactive, but then stopping it if it is paused for a certain duration
+- [x] Implement option of pausing container instead of stopping it
+- [x] Implement option of pausing container when inactive, but then stopping it if it is paused for a certain duration
 - [ ] Implement using compose profiles to control multiple containers
