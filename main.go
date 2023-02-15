@@ -25,6 +25,9 @@ var (
 	pauseContainerKey = envInit.EnvKey("TIMID_PAUSE_CONTAINER")
 	pauseContainer    bool
 
+	pauseDurationKey = envInit.EnvKey("TIMID_PAUSE_DURATION")
+	pauseDuration    time.Duration
+
 	containerShutdownDelayKey = envInit.EnvKey("TIMID_CONTAINER_SHUTDOWN_DELAY")
 	containerShutdownDelay    time.Duration
 
@@ -79,10 +82,23 @@ func initDockerController() {
 	if err != nil {
 		panic(fmt.Errorf("Failed to initialize Docker functionality: %s", err))
 	}
+
 	containerShutdownDelay, err = containerShutdownDelayKey.GetEnvDurationOrFallback(oneMinuteDuration)
-	verboseLog.Checkreport(4, fmt.Errorf("Container shutdown delay not set: %s", err))
+	if err != nil {
+		verboseLog.Checkreport(4, fmt.Errorf("Container shutdown delay not set: %s", err))
+	}
+
 	pauseContainer, err = pauseContainerKey.GetEnvBoolOrFallback(false)
-	verboseLog.Checkreport(4, fmt.Errorf("Docker controller will never pause a container: %s", err))
+	if err != nil {
+		verboseLog.Checkreport(4, fmt.Errorf("Docker controller will never pause a container: %s", err))
+	}
+
+	if pauseContainer {
+		pauseDuration, err = pauseDurationKey.GetEnvDuration()
+		if err != nil {
+			verboseLog.Checkreport(4, fmt.Errorf("Container will never be stopped %w", err))
+		}
+	}
 }
 
 func initEnvVariables() {
@@ -152,11 +168,22 @@ func shutdownContainerIfNoConnections(proxy *proxy.Proxy) {
 		if dockerController.ContainerIsPaused(container) {
 			return
 		}
-		verboseLog.Vlogf(1, "Stopping container %s", container.Name)
 		if pauseContainer {
+			verboseLog.Vlogf(1, "Pausing container %s", container.Name)
 			dockerController.PauseContainer(container)
+			verboseLog.Vlogf(1, "Container paused")
+			if pauseDuration != 0 {
+				go func() {
+					verboseLog.Vlogf(1, "Stopping container after delay of %s", pauseDuration.String())
+					time.Sleep(pauseDuration)
+					dockerController.StopContainer(container)
+					verboseLog.Vlogf(1, "Container stopped")
+				}()
+			}
 		} else {
+			verboseLog.Vlogf(1, "Stopping container %s", container.Name)
 			dockerController.StopContainer(container)
+			verboseLog.Vlogf(1, "Container stopped")
 		}
 	}()
 }

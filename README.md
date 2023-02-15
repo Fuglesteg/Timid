@@ -77,7 +77,7 @@ The Timid container will listen to connections and start the valheim container u
 |TIMID_TARGET_ADDRESS| Address to reroute traffic to, can be name of docker container running on the same network| String\|/URL| Unset & required |
 |TIMID_CONTAINER_NAME| Name of container running service, the container that will be shutdown and started based on number of connections| String| Unset & required |
 |TIMID_CONTAINER_SHUTDOWN_DELAY| Time until the proxy shuts down the container after no connections exist| <a href="#duration-string">Duration string</a>| 1 minute |
-|<s>TIMID_PAUSE_CONTAINER</s>| Unimplemented, will make the proxy pause the container instead of stopping it| Boolean| false |
+|TIMID_PAUSE_CONTAINER| Timid will pause the container instead of pausing it | Boolean| false |
 |TIMID_LOG_VERBOSITY| How verbose should the logs be| Integer, Range 1-6| 1 |
 |TIMID_CONNECTION_TIMEOUT_DELAY| UDP has no concept of a connection, so this tracks how long a connection must be unused for it to be considered disconnected| <a href="#duration-string">Duration string</a> | 1 minute |
 

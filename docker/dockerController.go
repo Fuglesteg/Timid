@@ -24,7 +24,7 @@ func NewDockerController() *DockerController {
 }
 
 func (controller *DockerController) StopContainer(container *Container) {
-	err := controller.client.ContainerKill(context.Background(), container.ID, "SIGTERM")
+	err := controller.client.ContainerStop(context.Background(), container.ID, nil)
 	if err != nil {
 		verboseLog.Checkreport(1, err)
 	}
@@ -77,6 +77,8 @@ func (controller *DockerController) NewContainer(containerName string) (*Contain
 	if err != nil {
 		return nil, err
 	}
-	container := &Container{Name: containerName, ID: containers[0].ID}
+	containerId := containers[0].ID
+	container := &Container{Name: containerName, ID: containerId}
 	return container, nil
 }
+
