@@ -155,8 +155,7 @@ func shutdownContainerIfNoConnections(proxy *proxy.Proxy) {
 	go func() {
 		containerProcedureRunning = true
 		defer func() { containerProcedureRunning = false }()
-		verboseLog.Vlogf(1, "Shutting down container after delay of %s",
-			containerShutdownDelay.String())
+
 		time.Sleep(containerShutdownDelay)
 		if proxy.GetConnectionsAmount() > 0 {
 			return
@@ -168,19 +167,24 @@ func shutdownContainerIfNoConnections(proxy *proxy.Proxy) {
 			return
 		}
 		if pauseContainer {
-			verboseLog.Vlogf(1, "Pausing container %s", container.Name)
+			verboseLog.Vlogf(1, "Pausing container %s, after delay of %s", 
+				container.Name, 
+				containerShutdownDelay.String())
 			dockerController.PauseContainer(container)
 			verboseLog.Vlogf(1, "Container paused")
 			if pauseDuration != 0 {
 				go func() {
-					verboseLog.Vlogf(1, "Stopping container after delay of %s", pauseDuration.String())
+					verboseLog.Vlogf(1, "Stopping container after delay of %s", 
+						pauseDuration.String())
 					time.Sleep(pauseDuration)
 					dockerController.StopContainer(container)
 					verboseLog.Vlogf(1, "Container stopped")
 				}()
 			}
 		} else {
-			verboseLog.Vlogf(1, "Stopping container %s", container.Name)
+			verboseLog.Vlogf(1, "Stopping container %s, after delay of %s", 
+				container.Name, 
+				containerShutdownDelay.String())
 			dockerController.StopContainer(container)
 			verboseLog.Vlogf(1, "Container stopped")
 		}
