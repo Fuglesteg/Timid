@@ -92,4 +92,7 @@ The Timid container will listen to connections and start the valheim container u
 # TODO
 - [x] Implement option of pausing container instead of stopping it
 - [x] Implement option of pausing container when inactive, but then stopping it if it is paused for a certain duration
-- [ ] Implement using compose profiles to control multiple containers
+- [ ] Implement using compose profiles or labels to control multiple containers
+- [ ] Listen on multiple ports
+- [ ] Support TCP?
+- [ ] REST API?
