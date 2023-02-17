@@ -10,7 +10,6 @@ import (
 	"github.com/fuglesteg/timid/verboseLog"
 )
 
-// TODO: Implement option for containers to shut down if paused for long enough
 // TODO: Experiment with proxy buffering packets until container starts
 // TODO: Support multiple containers
 // TODO: Support multiple ports
