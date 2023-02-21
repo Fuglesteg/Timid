@@ -82,3 +82,20 @@ func (controller *DockerController) NewContainer(containerName string) (*Contain
 	return container, nil
 }
 
+func (controller *DockerController) NewContainerGroup(groupName string) (*ContainerGroup, error) {
+	filterArgs := filters.NewArgs(
+		filters.Arg("label", "timid." + groupName),
+	)
+	listOptions := types.ContainerListOptions{All: true, Filters: filterArgs}
+	containers, err :=
+		controller.client.ContainerList(context.Background(), listOptions)
+	if err != nil {
+		return nil, err
+	}
+	containerGroup := ContainerGroup{Name: groupName, DockerController: controller}
+	for _, container := range containers {
+		container := &Container{Name: container.Names[0], ID: container.ID}
+		containerGroup.Containers = append(containerGroup.Containers, container)
+	}
+	return &containerGroup, nil
+}
