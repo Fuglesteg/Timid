@@ -19,7 +19,7 @@ The concept of disabling unused servers is not new, and this project was mainly 
 The code for the UDP proxy is mainly based on this [gist](https://gist.github.com/mike-zhang/3853251) by [mike-zhang](https://github.com/mike-zhang).
 
 There also exists a project that is very similar to Timid and might fit your usecase better, [Lazytainer](https://github.com/vmorganp/Lazytainer) 
-is an older project than timid and has the ability to control more than one container using groups, it can also listen on multiple ports
+is an older project than timid and has the ability listen on multiple ports which Timid currently does not.
 
 # Installation
 Timid is available as a docker image, this is the recommended way of running Timid.
@@ -49,11 +49,11 @@ services:
     image: lloesche/valheim-server
     restart: always
     stop_grace_period: 2m
-    cap_add:
-      - sys_nice
     volumes:
       - "./server/config:/config"
       - "./server/data:/opt/valheim"
+    labels:
+      - timid.group.valheim
   timid:
     image: fuglesteg/timid
     restart: always
@@ -64,13 +64,15 @@ services:
     environment:
       TIMID_PORT: 2456
       TIMID_TARGET_ADDRESS: valheim:2456
-      TIMID_CONTAINER_NAME: valheim-valheim-1 # need to specify container name prefixed by project name and suffixed by container instance number (usually 1).
+      TIMID_CONTAINER_GROUP: valheim
 ```
 
 Note that because the containers are running on the same docker network they are able to communicate.
 The docker local DNS resolves the hostname of valheim to the container.
 This docker compose setup will start both containers and if no connections are made the valheim container will stop.
 The Timid container will listen to connections and start the valheim container up again if a connection is made.
+You can also start only the Timid container itself without starting the other container(s), the important thing to remember
+in that case is that the container has to be built in order for Timid to start it.
 
 ## Configuration
 
@@ -78,7 +80,8 @@ The Timid container will listen to connections and start the valheim container u
 |---|---|---|---|
 |TIMID_PORT| Port on host computer the program should listen to|Integer| Unset & required |
 |TIMID_TARGET_ADDRESS| Address to reroute traffic to, can be name of docker container running on the same network| String\|/URL| Unset & required |
-|TIMID_CONTAINER_NAME| Name of container running service, the container that will be shutdown and started based on number of connections| String| Unset & required |
+|<s>TIMID_CONTAINER_NAME</s>| DEPRECATED as of 1.2 (use TIMID_GROUP_NAME)    <s>Name of container running service, the container that will be shutdown and started based on number of connections</s>| String| Unset |
+|TIMID_GROUP_NAME| Name of container group, which is used to look up label of containers | String | Unset & required |
 |TIMID_CONTAINER_SHUTDOWN_DELAY| Time until the proxy shuts down the container after no connections exist| <a href="#duration-string">Duration string</a>| 1 minute |
 |TIMID_PAUSE_CONTAINER| Timid will pause the container instead of pausing it | Boolean| false |
 |TIMID_LOG_VERBOSITY| How verbose should the logs be| Integer, Range 1-6| 1 |
@@ -92,7 +95,7 @@ The Timid container will listen to connections and start the valheim container u
 # TODO
 - [x] Implement option of pausing container instead of stopping it
 - [x] Implement option of pausing container when inactive, but then stopping it if it is paused for a certain duration
-- [ ] Implement using compose profiles or labels to control multiple containers
+- [x] Implement using labels to control multiple containers
 - [ ] Listen on multiple ports
 - [ ] Support TCP?
 - [ ] REST API?

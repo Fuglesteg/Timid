@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+	"errors"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
@@ -55,16 +56,18 @@ func (controller *DockerController) ContainerIsRunning(container *Container) boo
 	info, err := controller.client.ContainerInspect(context.Background(), container.ID)
 	if err != nil {
 		verboseLog.Checkreport(1, err)
+		return false
 	}
-	return info.State.Running
+	return info.State.Status == "running" && !info.State.Paused
 }
 
 func (controller *DockerController) ContainerIsPaused(container *Container) bool {
 	info, err := controller.client.ContainerInspect(context.Background(), container.ID)
 	if err != nil {
 		verboseLog.Checkreport(1, err)
+		return false
 	}
-	return info.State.Paused
+	return info.State.Status == "paused" || info.State.Paused
 }
 
 func (controller *DockerController) NewContainer(containerName string) (*Container, error) {
@@ -84,18 +87,26 @@ func (controller *DockerController) NewContainer(containerName string) (*Contain
 
 func (controller *DockerController) NewContainerGroup(groupName string) (*ContainerGroup, error) {
 	filterArgs := filters.NewArgs(
-		filters.Arg("label", "timid." + groupName),
+		filters.Arg("label", "timid.group." + groupName),
 	)
 	listOptions := types.ContainerListOptions{All: true, Filters: filterArgs}
-	containers, err :=
+	filteredContainers, err :=
 		controller.client.ContainerList(context.Background(), listOptions)
 	if err != nil {
 		return nil, err
 	}
-	containerGroup := ContainerGroup{Name: groupName, DockerController: controller}
-	for _, container := range containers {
+	if len(filteredContainers) <= 0 {
+		return nil, errors.New("No containers found with label: " + "timid.group." + groupName)
+	}
+	var initializedContainers []*Container
+	for _, container := range filteredContainers {
 		container := &Container{Name: container.Names[0], ID: container.ID}
-		containerGroup.Containers = append(containerGroup.Containers, container)
+		initializedContainers = append(initializedContainers, container)
+	}
+	containerGroup := ContainerGroup {
+		Name: groupName, 
+		dockerController: controller, 
+		containers: initializedContainers,
 	}
 	return &containerGroup, nil
 }
