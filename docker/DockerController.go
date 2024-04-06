@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/docker/docker/api/types"
+	dContainer "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/fuglesteg/timid/verboseLog"
@@ -25,7 +26,7 @@ func NewDockerController() *DockerController {
 }
 
 func (controller *DockerController) StopContainer(container *Container) {
-	err := controller.client.ContainerStop(context.Background(), container.ID, nil)
+	err := controller.client.ContainerStop(context.Background(), container.ID, dContainer.StopOptions{})
 	if err != nil {
 		verboseLog.Checkreport(1, err)
 	}
