@@ -2,8 +2,9 @@
 # Description
 Timid is a UDP proxy that tracks connections and stops and starts docker containers.
 Developed to be used with game servers that need to save resources.
-The container will start as soon as a connection attempt is made to the server, and will shut down
+Timid will start the containers it controls as soon as a connection attempt is made to the specified port, and will shut down the containers
 if no connections exist for a customizable amount of idle time.
+
 ## Motivation
 The use case for Timid was running game servers that don't need to be instantly accessible,
 but should still be available.
