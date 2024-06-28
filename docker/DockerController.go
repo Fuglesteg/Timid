@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/docker/docker/api/types"
 	dContainer "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
@@ -16,10 +15,12 @@ type DockerController struct {
 }
 
 func NewDockerController() *DockerController {
+	context := context.Background()
 	client, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		verboseLog.Checkreport(1, err)
 	}
+	client.NegotiateAPIVersion(context)
 	dockerController := new(DockerController)
 	dockerController.client = client
 	return dockerController
@@ -47,7 +48,7 @@ func (controller *DockerController) UnpauseContainer(container *Container) {
 }
 
 func (controller *DockerController) StartContainer(container *Container) {
-	err := controller.client.ContainerStart(context.Background(), container.ID, types.ContainerStartOptions{})
+	err := controller.client.ContainerStart(context.Background(), container.ID, dContainer.StartOptions{})
 	if err != nil {
 		verboseLog.Checkreport(1, err)
 	}
@@ -75,7 +76,7 @@ func (controller *DockerController) NewContainer(containerName string) (*Contain
 	filterArgs := filters.NewArgs(
 		filters.Arg("name", containerName),
 	)
-	listOptions := types.ContainerListOptions{All: true, Filters: filterArgs}
+	listOptions := dContainer.ListOptions{All: true, Filters: filterArgs}
 	containers, err :=
 		controller.client.ContainerList(context.Background(), listOptions)
 	if err != nil {
@@ -90,7 +91,7 @@ func (controller *DockerController) NewContainerGroup(groupName string) (*Contai
 	filterArgs := filters.NewArgs(
 		filters.Arg("label", "timid.group." + groupName),
 	)
-	listOptions := types.ContainerListOptions{All: true, Filters: filterArgs}
+	listOptions := dContainer.ListOptions{All: true, Filters: filterArgs}
 	filteredContainers, err :=
 		controller.client.ContainerList(context.Background(), listOptions)
 	if err != nil {
