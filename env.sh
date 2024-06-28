@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 export TIMID_PORT=8080
 export TIMID_PAUSE_CONTAINER=true
 # export TIMID_CONTAINER_NAME="web-serv-test"
