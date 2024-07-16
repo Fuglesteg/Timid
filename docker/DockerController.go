@@ -26,36 +26,36 @@ func NewDockerController() *DockerController {
 	return dockerController
 }
 
-func (controller *DockerController) StopContainer(container *Container) {
-	err := controller.client.ContainerStop(context.Background(), container.ID, dContainer.StopOptions{})
+func (controller *DockerController) StopContainer(containerId string) {
+	err := controller.client.ContainerStop(context.Background(), containerId, dContainer.StopOptions{})
 	if err != nil {
 		verboseLog.Checkreport(1, err)
 	}
 }
 
-func (controller *DockerController) PauseContainer(container *Container) {
-	err := controller.client.ContainerPause(context.Background(), container.ID)
+func (controller *DockerController) PauseContainer(containerId string) {
+	err := controller.client.ContainerPause(context.Background(), containerId)
 	if err != nil {
 		verboseLog.Checkreport(1, err)
 	}
 }
 
-func (controller *DockerController) UnpauseContainer(container *Container) {
-	err := controller.client.ContainerUnpause(context.Background(), container.ID)
+func (controller *DockerController) UnpauseContainer(containerId string) {
+	err := controller.client.ContainerUnpause(context.Background(), containerId)
 	if err != nil {
 		verboseLog.Checkreport(1, err)
 	}
 }
 
-func (controller *DockerController) StartContainer(container *Container) {
-	err := controller.client.ContainerStart(context.Background(), container.ID, dContainer.StartOptions{})
+func (controller *DockerController) StartContainer(containerId string) {
+	err := controller.client.ContainerStart(context.Background(), containerId, dContainer.StartOptions{})
 	if err != nil {
 		verboseLog.Checkreport(1, err)
 	}
 }
 
-func (controller *DockerController) ContainerIsRunning(container *Container) bool {
-	info, err := controller.client.ContainerInspect(context.Background(), container.ID)
+func (controller *DockerController) ContainerIsRunning(containerId string) bool {
+	info, err := controller.client.ContainerInspect(context.Background(), containerId)
 	if err != nil {
 		verboseLog.Checkreport(1, err)
 		return false
@@ -63,8 +63,8 @@ func (controller *DockerController) ContainerIsRunning(container *Container) boo
 	return info.State.Status == "running" && !info.State.Paused
 }
 
-func (controller *DockerController) ContainerIsPaused(container *Container) bool {
-	info, err := controller.client.ContainerInspect(context.Background(), container.ID)
+func (controller *DockerController) ContainerIsPaused(containerId string) bool {
+	info, err := controller.client.ContainerInspect(context.Background(), containerId)
 	if err != nil {
 		verboseLog.Checkreport(1, err)
 		return false

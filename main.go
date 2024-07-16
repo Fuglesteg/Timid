@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/fuglesteg/timid/api"
 	"github.com/fuglesteg/timid/docker"
 	"github.com/fuglesteg/timid/envInit"
 	"github.com/fuglesteg/timid/proxy"
@@ -41,6 +42,12 @@ var (
 	verbosityKey      = envInit.EnvKey("TIMID_LOG_VERBOSITY")
 	containerNameKey  = envInit.EnvKey("TIMID_CONTAINER_NAME")
 	containerGroupKey = envInit.EnvKey("TIMID_CONTAINER_GROUP")
+
+	apiEnabledKey = envInit.EnvKey("TIMID_API_ENABLE")
+	apiEnabled bool
+
+	apiPortKey = envInit.EnvKey("TIMID_API_PORT")
+	apiPort int
 )
 
 
@@ -74,6 +81,16 @@ func main() {
 			}
 		}()
 	}
+
+	if apiEnabled {
+		api := api.Api {
+			ProxyServer: proxyServer,
+			ContainerGroup: containerGroup,
+			DockerController: dockerController,
+		}
+		api.Init(apiPort)
+	}
+
 	proxyServer.RunProxy()
 }
 
@@ -136,6 +153,16 @@ func initEnvVariables() {
 	connectionTimeoutDelay, err = connectionTimeoutDelayKey.GetEnvDurationOrFallback(time.Duration(5 * time.Second))
 	if err != nil {
 		verboseLog.Checkreport(4, fmt.Errorf("Proxy connection timeout delay not set: %w", err))
+	}
+
+	apiPort, err = apiPortKey.GetEnvIntOrFallback(80)
+	if err != nil {
+		verboseLog.Checkreport(1, fmt.Errorf("Could not configure port for API: %w", err))
+	}
+	
+	apiEnabled, err = apiEnabledKey.GetEnvBool()
+	if err != nil {
+		verboseLog.Checkreport(4, fmt.Errorf("Api not enabled: %w", err))
 	}
 }
 

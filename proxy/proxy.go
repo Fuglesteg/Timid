@@ -48,6 +48,14 @@ func NewProxy(proxyPort int, targetAddress string, connectionTimeoutDelay time.D
 	return proxy, err
 }
 
+func (proxy *Proxy) GetPort() int {
+	return proxy.port;
+}
+
+func (proxy *Proxy) GetTargetAddress() string {
+	return proxy.targetAddr;
+}
+
 func (proxy *Proxy) CleanUnusedConnections() {
 	go func() {
 		for _, connection := range proxy.clientDict {
