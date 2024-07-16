@@ -183,7 +183,7 @@ func pauseContainerProcedure(delay time.Duration) {
 func shutdownContainerProcedure(delay time.Duration) {
 	verboseLog.Vlogf(1, "Stopping containers in group %s, after delay of %s",
 		containerGroup.Name,
-		containerShutdownDelay.String())
+		delay.String())
 	containerProcedure(func() {
 		containerGroup.Stop()
 		verboseLog.Vlogf(1, "Containers in group %s stopped", containerGroup.Name)
