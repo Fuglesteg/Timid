@@ -85,6 +85,7 @@ in that case is that the container has to be built in order for Timid to start i
 |TIMID_GROUP_NAME| Name of container group, which is used to look up label of containers | String | Unset & required |
 |TIMID_CONTAINER_SHUTDOWN_DELAY| Time until the proxy shuts down the container after no connections exist| <a href="#duration-string">Duration string</a>| 1 minute |
 |TIMID_PAUSE_CONTAINER| Timid will pause the container instead of pausing it | Boolean| false |
+|TIMID_PAUSE_DURATION| How long should the container stay paused before it is shut down. If 0 container will stay paused. | <a href="#duration-string">Duration string</a> | 0 |
 |TIMID_LOG_VERBOSITY| How verbose should the logs be| Integer, Range 1-6| 1 |
 |TIMID_CONNECTION_TIMEOUT_DELAY| UDP has no concept of a connection, so this tracks how long a connection must be unused for it to be considered disconnected| <a href="#duration-string">Duration string</a> | 1 minute |
 
