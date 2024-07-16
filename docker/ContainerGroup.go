@@ -76,7 +76,7 @@ func (group *ContainerGroup) AllContainersArePaused() bool {
 	return isPaused
 }
 
-func (group *ContainerGroup)forEachContainer(function func(*Container)) {
+func (group *ContainerGroup) forEachContainer(function func(*Container)) {
 	for _, container := range group.containers {
 		function(container)
 	}

@@ -151,16 +151,10 @@ func startContainers() {
 }
 
 func shutdownContainerIfNoConnections(proxy *proxy.Proxy) {
-	if containerProcedureRunning {
-		return
-	}
-	if proxy.GetConnectionsAmount() > 0 {
-		return
-	}
-	if containerGroup.AllContainersAreStopped() {
-		return
-	}
-	if containerGroup.AllContainersArePaused() {
+	if containerProcedureRunning ||
+		proxy.GetConnectionsAmount() > 0 ||
+		containerGroup.AllContainersAreStopped() || 
+		containerGroup.AllContainersArePaused() {
 		return
 	}
 
