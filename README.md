@@ -87,6 +87,8 @@ in that case is that the container has to be built in order for Timid to start i
 |TIMID_PAUSE_CONTAINER| Timid will pause the container instead of pausing it | Boolean| false |
 |TIMID_PAUSE_DURATION| How long should the container stay paused before it is shut down. If 0 container will stay paused. | <a href="#duration-string">Duration string</a> | 0 |
 |TIMID_LOG_VERBOSITY| How verbose should the logs be| Integer, Range 1-6| 1 |
+|TIMID_API_ENABLE| Enable the <a href="/docs/api.md">REST API</a> | Boolean | false |
+|TIMID_API_PORT| Set the port the REST API listens to | integer | 80 |
 |TIMID_CONNECTION_TIMEOUT_DELAY| UDP has no concept of a connection, so this tracks how long a connection must be unused for it to be considered disconnected| <a href="#duration-string">Duration string</a> | 1 minute |
 
 ### [Duration string](https://pkg.go.dev/time#ParseDuration)
@@ -98,6 +100,6 @@ in that case is that the container has to be built in order for Timid to start i
 - [x] Implement option of pausing container instead of stopping it
 - [x] Implement option of pausing container when inactive, but then stopping it if it is paused for a certain duration
 - [x] Implement using labels to control multiple containers
+- [x] REST API
 - [ ] Listen on multiple ports
 - [ ] Support TCP?
-- [ ] REST API?
