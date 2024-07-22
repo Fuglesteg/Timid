@@ -38,6 +38,12 @@ func (group *ContainerGroup) Unpause() {
 	})
 }
 
+func (group *ContainerGroup) Restart() {
+	group.forEachContainer(func(container *Container) {
+		group.dockerController.RestartContainer(container.ID)
+	})
+}
+
 func (group *ContainerGroup) AnyContainerIsPaused() bool {
 	var isPaused bool = false
 	group.forEachContainer(func(container *Container) {

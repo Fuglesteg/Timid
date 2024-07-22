@@ -151,6 +151,10 @@ func (api Api) Init(port int) {
 		api.ContainerGroup.Pause()
 	})
 
+	mux.HandleFunc("POST /containers/restart", func(w http.ResponseWriter, r *http.Request) {
+		api.ContainerGroup.Restart()
+	})
+
 	mux.HandleFunc("POST /containers/{containerId}/start", func(w http.ResponseWriter, r *http.Request) {
 		containerId := r.PathValue("containerId")
 		api.DockerController.StartContainer(containerId)
@@ -164,6 +168,11 @@ func (api Api) Init(port int) {
 	mux.HandleFunc("POST /containers/{containerId}/pause", func(w http.ResponseWriter, r *http.Request) {
 		containerId := r.PathValue("containerId")
 		api.DockerController.PauseContainer(containerId)
+	})
+
+	mux.HandleFunc("POST /containers/{containerId}/restart", func(w http.ResponseWriter, r *http.Request) {
+		containerId := r.PathValue("containerId")
+		api.DockerController.RestartContainer(containerId)
 	})
 
 	go func() {

@@ -54,6 +54,13 @@ func (controller *DockerController) StartContainer(containerId string) {
 	}
 }
 
+func (controller *DockerController) RestartContainer(containerId string) {
+	err := controller.client.ContainerRestart(context.Background(), containerId, dContainer.StopOptions{})
+	if err != nil {
+		verboseLog.Checkreport(1, err)
+	}
+}
+
 func (controller *DockerController) ContainerIsRunning(containerId string) bool {
 	info, err := controller.client.ContainerInspect(context.Background(), containerId)
 	if err != nil {

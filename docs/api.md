@@ -1,3 +1,5 @@
+The API should **NOT** be publicly exposed!
+
 |Route|Purpose|Return value|
 |---|---|---|
 |GET /info| General info on the state of Timid | `{"connections": int, "containerGroup": {"name": string, "state": "Stopped" \| "Running" \| "Paused"}}` |
@@ -8,6 +10,8 @@
 |POST /containers/start| Start all containers in group | null |
 |POST /containers/stop| Stop all containers in group | null |
 |POST /containers/pause| Pause all containers in group | null |
+|POST /containers/restart| Restart all containers in group | null |
 |POST /containers/{containerId}/start| Start a certain container given an ID | null |
 |POST /containers/{containerId}/stop| Stop a certain container given an ID | null |
 |POST /containers/{containerId}/pause| Pause a certain container given an ID | null |
+|POST /containers/{containerId}/restart| Restart a certain container given an ID | null |
