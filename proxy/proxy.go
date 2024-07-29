@@ -121,16 +121,16 @@ func (proxy *Proxy) runConnection(conn *connection) {
 	for {
 		// Read from server
 		n, err := conn.ServerConn.Read(buffer[0:])
-		if verboseLog.Checkreport(1, err) {
+		if verboseLog.Checkreport(3, err) {
 			continue
 		}
 		// Relay it to client
 		_, err = proxy.proxyConn.WriteToUDP(buffer[0:n], conn.ClientAddr)
-		if verboseLog.Checkreport(1, err) {
+		if verboseLog.Checkreport(3, err) {
 			continue
 		}
 		conn.UpdateLastUsed()
-		verboseLog.Vlogf(3, "Relayed '%s' from server to %s.\n",
+		verboseLog.Vlogf(5, "Relayed '%s' from server to %s.\n",
 			string(buffer[0:n]), conn.ClientAddr.String())
 	}
 }
@@ -144,14 +144,14 @@ func (proxy *Proxy) RunProxy() {
 			continue
 		}
 		proxy.OnConnection <-1
-		verboseLog.Vlogf(3, "Read '%s' from client %s\n",
+		verboseLog.Vlogf(5, "Read '%s' from client %s\n",
 			string(buffer[0:n]), clientAddr.String())
 		clientAddressString := clientAddr.String()
 		proxy.dlock()
 		if proxy.serverAddr == nil {
 			proxy.dunlock()
 			err := proxy.setup()
-			if verboseLog.Checkreport(1, err) {
+			if verboseLog.Checkreport(2, err) {
 				continue
 			}
 			proxy.dlock()
@@ -175,7 +175,7 @@ func (proxy *Proxy) RunProxy() {
 		}
 		// Relay to server
 		_, err = conn.ServerConn.Write(buffer[0:n])
-		if verboseLog.Checkreport(1, err) {
+		if verboseLog.Checkreport(3, err) {
 			continue
 		}
 	}
