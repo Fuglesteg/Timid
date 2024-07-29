@@ -94,6 +94,16 @@ func (group *ContainerGroup) AllContainersArePaused() bool {
 	return isPaused
 }
 
+func (group *ContainerGroup) AllContainersAreRunning() bool {
+	isRunning := true
+	group.forEachContainer(func(container *Container) {
+		if !group.dockerController.ContainerIsRunning(container.ID) {
+			isRunning = false
+		}
+	})
+	return isRunning
+}
+
 func (group *ContainerGroup) forEachContainer(function func(*Container)) {
 	for _, container := range group.containers {
 		function(container)

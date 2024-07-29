@@ -19,6 +19,7 @@ var dockerController *docker.DockerController
 var containerProcedureRunning = false
 var oneMinuteDuration, _ = time.ParseDuration("1m")
 var containerGroup *docker.ContainerGroup = new(docker.ContainerGroup)
+var containersRunning bool = false
 
 var (
 	pauseContainerKey = envInit.EnvKey("TIMID_PAUSE_CONTAINER")
@@ -63,6 +64,7 @@ func main() {
 	proxyServer, err = proxy.NewProxy(proxyPort, targetAddress, connectionTimeoutDelay)
 
 	verboseLog.Checkreport(1, err)
+	containersRunning = containerGroup.AllContainersAreRunning()
 
 	if dockerController != nil {
 		go func() {
@@ -70,7 +72,9 @@ func main() {
 				L: for {
 					select {
 					case <- proxyServer.OnConnection:
-						go startContainers()
+						if !containersRunning {
+							startContainers()
+						}
 						break L
 					case <- time.After(5 * time.Second):
 						proxyServer.CleanUnusedConnections()
@@ -167,6 +171,7 @@ func initEnvVariables() {
 }
 
 func startContainers() {
+	containersRunning = true
 	if containerGroup.AnyContainerIsPaused() {
 		verboseLog.Vlogf(1, "Unpausing containers")
 		containerGroup.Unpause()
@@ -233,6 +238,7 @@ func containerProcedure(procedure func(), delay time.Duration) {
 				}
 			case <-time.After(delay): {
 					procedure()
+					containersRunning = false
 					return
 				}
 			}
