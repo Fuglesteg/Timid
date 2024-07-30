@@ -16,7 +16,7 @@ Idle game servers can sometimes use an unexpected amount of resources and that i
 the use case for Timid emerged.
 
 The concept of disabling unused servers is not new, and this project was mainly inspired by 
-[Infrared](https://github.com/haveachin/infrared), which has all the same capabilites as Timid (and more) for minecraft servers (which are TCP based).
+[Infrared](https://github.com/haveachin/infrared) (Version 1.x), which has all the same capabilites as Timid (and more) for minecraft servers (which are TCP based).
 The code for the UDP proxy is mainly based on this [gist](https://gist.github.com/mike-zhang/3853251) by [mike-zhang](https://github.com/mike-zhang).
 
 There also exists a project that is very similar to Timid and might fit your usecase better, [Lazytainer](https://github.com/vmorganp/Lazytainer) 
