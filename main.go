@@ -14,12 +14,12 @@ import (
 
 // TODO: Experiment with proxy buffering packets until container starts
 // TODO: Support multiple ports
+// TODO: Api endpoint for checking if game server is accepting connections yet
 var proxyServer *proxy.Proxy
 var dockerController *docker.DockerController
 var containerProcedureRunning = false
 var oneMinuteDuration, _ = time.ParseDuration("1m")
 var containerGroup *docker.ContainerGroup = new(docker.ContainerGroup)
-var containersRunning bool = false
 
 var (
 	pauseContainerKey = envInit.EnvKey("TIMID_PAUSE_CONTAINER")
@@ -64,20 +64,16 @@ func main() {
 	proxyServer, err = proxy.NewProxy(proxyPort, targetAddress, connectionTimeoutDelay)
 
 	verboseLog.Checkreport(1, err)
-	containersRunning = containerGroup.AllContainersAreRunning()
 
 	if dockerController != nil {
 		go func() {
 			for {
 				L: for {
 					select {
-					case <- proxyServer.OnConnection:
-						if !containersRunning {
-							startContainers()
-						}
+					case <- proxyServer.OnNewConnection:
+						startContainers()
 						break L
 					case <- time.After(5 * time.Second):
-						proxyServer.CleanUnusedConnections()
 						shutdownContainerIfNoConnections(proxyServer)
 						break L
 					}
@@ -171,7 +167,6 @@ func initEnvVariables() {
 }
 
 func startContainers() {
-	containersRunning = true
 	if containerGroup.AnyContainerIsPaused() {
 		verboseLog.Vlogf(1, "Unpausing containers")
 		containerGroup.Unpause()
@@ -232,13 +227,12 @@ func containerProcedure(procedure func(), delay time.Duration) {
 		defer func() { containerProcedureRunning = false }()
 		for {
 			select {
-			case <-proxyServer.OnConnection: {
+			case <-proxyServer.OnNewConnection: {
 					verboseLog.Vlogf(1, "Connection detected, aborting pause/shutdown procedure")
 					return
 				}
 			case <-time.After(delay): {
 					procedure()
-					containersRunning = false
 					return
 				}
 			}

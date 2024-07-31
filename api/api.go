@@ -102,7 +102,7 @@ func (api Api) Init(port int) {
 	})
 
 	mux.HandleFunc("POST /proxy/trigger", func(w http.ResponseWriter, r *http.Request) {
-		api.ProxyServer.OnConnection <- 1
+		api.ProxyServer.OnNewConnection <- 1
 	})
 
 	mux.HandleFunc("GET /proxy", func(w http.ResponseWriter, r *http.Request) {

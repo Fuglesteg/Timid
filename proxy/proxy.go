@@ -31,8 +31,8 @@ type Proxy struct {
 	// Time until the proxy treats a connection as unused
 	timeOutDelay time.Duration
 
-	// Channel which reacts to connections
-	OnConnection chan int
+	// Channel which reacts to new connections
+	OnNewConnection chan int
 }
 
 func NewProxy(proxyPort int, targetAddress string, connectionTimeoutDelay time.Duration) (*Proxy, error) {
@@ -42,7 +42,7 @@ func NewProxy(proxyPort int, targetAddress string, connectionTimeoutDelay time.D
 	proxy.timeOutDelay = connectionTimeoutDelay
 	proxy.targetAddr = targetAddress
 	proxy.port = proxyPort
-	proxy.OnConnection = make(chan int)
+	proxy.OnNewConnection = make(chan int)
 	err := proxy.setup()
 
 	return proxy, err
@@ -138,12 +138,19 @@ func (proxy *Proxy) runConnection(conn *connection) {
 // Routine to handle inputs to Proxy port
 func (proxy *Proxy) RunProxy() {
 	var buffer [1500]byte
+
+	go func() {
+		for {
+			time.Sleep(5 * time.Second)
+			proxy.CleanUnusedConnections()
+		}
+	}()
+
 	for {
 		n, clientAddr, err := proxy.proxyConn.ReadFromUDP(buffer[0:])
 		if verboseLog.Checkreport(1, err) {
 			continue
 		}
-		proxy.OnConnection <-1
 		verboseLog.Vlogf(5, "Read '%s' from client %s\n",
 			string(buffer[0:n]), clientAddr.String())
 		clientAddressString := clientAddr.String()
@@ -169,6 +176,7 @@ func (proxy *Proxy) RunProxy() {
 			verboseLog.Vlogf(2, "Created new connection for client %s\n", clientAddressString)
 			// Fire up routine to manage new connection
 			go proxy.runConnection(conn)
+			proxy.OnNewConnection <- 1
 		} else {
 			verboseLog.Vlogf(5, "Found connection for client %s\n", clientAddressString)
 			proxy.dunlock()
