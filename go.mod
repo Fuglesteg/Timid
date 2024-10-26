@@ -2,8 +2,6 @@ module github.com/fuglesteg/timid
 
 go 1.22
 
-toolchain go1.21.5
-
 require github.com/docker/docker v27.0.2+incompatible
 
 require (

@@ -86,7 +86,6 @@ func main() {
 		api := api.Api {
 			ProxyServer: proxyServer,
 			ContainerGroup: containerGroup,
-			DockerController: dockerController,
 		}
 		api.Init(apiPort)
 	}

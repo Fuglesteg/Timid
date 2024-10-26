@@ -13,7 +13,6 @@ import (
 type Api struct {
 	ProxyServer *proxy.Proxy
 	ContainerGroup *docker.ContainerGroup
-	DockerController *docker.DockerController
 }
 
 type ContainerState string
@@ -47,23 +46,28 @@ type Proxy struct {
 }
 
 func (api Api) getContainerGroupState() ContainerState {
-	if api.ContainerGroup.AllContainersArePaused() {
+	isPaused := api.ContainerGroup.AllContainersArePaused()
+	if isPaused {
 		return Paused
-	} else if api.ContainerGroup.AllContainersAreStopped() {
+	} 
+	isStopped := api.ContainerGroup.AllContainersAreStopped()
+	if isStopped {
 		return Stopped
-	} else {
-		return Running
-	}
+	} 
+
+	return Running
 }
 
 func (api Api) getContainerState(containerId string) ContainerState {
-	if api.DockerController.ContainerIsPaused(containerId) {
+	isPaused, _ := api.ContainerGroup.ContainerIsPaused(containerId)
+	if isPaused {
 		return Paused
-	} else if api.DockerController.ContainerIsRunning(containerId) {
+	} 
+	isRunning, _ := api.ContainerGroup.ContainerIsRunning(containerId)
+	if isRunning {
 		return Running
-	} else {
-		return Stopped
 	}
+	return Stopped
 }
 
 func (api Api) mapContainerToContainerDTO(container docker.Container) Container {
@@ -128,12 +132,17 @@ func (api Api) Init(port int) {
 
 	mux.HandleFunc("GET /containers/{containerId}", func(w http.ResponseWriter, r *http.Request) {
 		containerId := r.PathValue("containerId")
-		var containerDTO Container
+		var containerDTO *Container
 		containers := api.ContainerGroup.GetContainers()
 		for _, container := range containers {
 			if containerId == container.ID {
-				containerDTO = api.mapContainerToContainerDTO(*container)
+				*containerDTO = api.mapContainerToContainerDTO(*container)
 			}
+		}
+
+		if containerDTO == nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
 		}
 
 		writeJsonToResponse(w, containerDTO);
@@ -157,22 +166,22 @@ func (api Api) Init(port int) {
 
 	mux.HandleFunc("POST /containers/{containerId}/start", func(w http.ResponseWriter, r *http.Request) {
 		containerId := r.PathValue("containerId")
-		api.DockerController.StartContainer(containerId)
+		api.ContainerGroup.StartContainer(containerId)
 	})
 
 	mux.HandleFunc("POST /containers/{containerId}/stop", func(w http.ResponseWriter, r *http.Request) {
 		containerId := r.PathValue("containerId")
-		api.DockerController.StopContainer(containerId)
+		api.ContainerGroup.StopContainer(containerId)
 	})
 
 	mux.HandleFunc("POST /containers/{containerId}/pause", func(w http.ResponseWriter, r *http.Request) {
 		containerId := r.PathValue("containerId")
-		api.DockerController.PauseContainer(containerId)
+		api.ContainerGroup.PauseContainer(containerId)
 	})
 
 	mux.HandleFunc("POST /containers/{containerId}/restart", func(w http.ResponseWriter, r *http.Request) {
 		containerId := r.PathValue("containerId")
-		api.DockerController.RestartContainer(containerId)
+		api.ContainerGroup.RestartContainer(containerId)
 	})
 
 	go func() {

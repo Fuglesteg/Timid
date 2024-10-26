@@ -1,5 +1,7 @@
 package docker
 
+import "errors"
+
 type ContainerGroup struct  {
 	Name string
 	containers []*Container
@@ -15,97 +17,148 @@ func NewContainerGroup(name string, containers []*Container, controller *DockerC
 }
 
 func (group *ContainerGroup) Start() {
-	group.forEachContainer(func(container *Container) {
+	for _, container := range group.containers {
 		group.dockerController.StartContainer(container.ID)
-	})
+	}
+}
+
+func (group *ContainerGroup) ContainerExists(containerId string) bool {
+	exists := false
+	for _, container := range group.containers {
+		if container.ID == containerId {
+			exists = true
+			break
+		}
+	}
+	return exists
+}
+
+func (group *ContainerGroup) ContainerIsPaused(containerId string) (bool, error) {
+	if group.ContainerExists(containerId) {
+		return group.dockerController.ContainerIsPaused(containerId), nil
+	} else {
+		return false, errors.New("Container does not exist in group")
+	}
+}
+
+func (group *ContainerGroup) ContainerIsRunning(containerId string) (bool, error) {
+	if group.ContainerExists(containerId) {
+		return group.dockerController.ContainerIsRunning(containerId), nil
+	} else {
+		return false, errors.New("Container does not exist in group")
+	}
+}
+
+func (group *ContainerGroup) StartContainer(containerId string) {
+	if group.ContainerExists(containerId) {
+		group.dockerController.StartContainer(containerId)
+	}
 }
 
 func (group *ContainerGroup) Stop() {
-	group.forEachContainer(func(container *Container) {
+	for _, container := range group.containers {
 		group.dockerController.StopContainer(container.ID)
-	})
+	}
+}
+
+func (group *ContainerGroup) StopContainer(containerId string) {
+	if group.ContainerExists(containerId) {
+		group.dockerController.StopContainer(containerId)
+	}
 }
 
 func (group *ContainerGroup) Pause() {
-	group.forEachContainer(func(container *Container) {
+	for _, container := range group.containers {
 		group.dockerController.PauseContainer(container.ID)
-	})
+	}
+}
+
+func (group *ContainerGroup) PauseContainer(containerId string) {
+	if group.ContainerExists(containerId) {
+		group.dockerController.PauseContainer(containerId)
+	}
 }
 
 func (group *ContainerGroup) Unpause() {
-	group.forEachContainer(func(container *Container) {
+	for _, container := range group.containers {
 		group.dockerController.UnpauseContainer(container.ID)
-	})
+	}
+}
+
+func (group *ContainerGroup) UnpauseContainer(containerId string) {
+	if group.ContainerExists(containerId) {
+		group.dockerController.UnpauseContainer(containerId)
+	}
 }
 
 func (group *ContainerGroup) Restart() {
-	group.forEachContainer(func(container *Container) {
+	for _, container := range group.containers {
 		group.dockerController.RestartContainer(container.ID)
-	})
+	}
+}
+
+func (group *ContainerGroup) RestartContainer(containerId string) {
+	if group.ContainerExists(containerId) {
+		group.dockerController.RestartContainer(containerId)
+	}
 }
 
 func (group *ContainerGroup) AnyContainerIsPaused() bool {
 	var isPaused bool = false
-	group.forEachContainer(func(container *Container) {
+	for _, container := range group.containers {
 		if group.dockerController.ContainerIsPaused(container.ID) {
 			isPaused = true
 		}
-	})
+	}
 	return isPaused
 }
 
 func (group *ContainerGroup) AnyContainerIsStopped() bool {
 	var isStopped bool = false
-	group.forEachContainer(func(container *Container) {
+	for _, container := range group.containers {
 		if !group.dockerController.ContainerIsRunning(container.ID) {
 			isStopped = true
 		}
-	})
+	}
 	return isStopped
 }
 
 func (group *ContainerGroup) AnyContainerIsRunning() bool {
 	var isRunning bool = false
-	group.forEachContainer(func(container *Container) {
+	for _, container := range group.containers {
 		if group.dockerController.ContainerIsRunning(container.ID) {
 			isRunning = true
 		}
-	})
+	}
 	return isRunning
 }
 
 func (group *ContainerGroup) AllContainersAreStopped() bool {
 	isStopped := true
-	group.forEachContainer(func(container *Container) {
+	for _, container := range group.containers {
 		if group.dockerController.ContainerIsRunning(container.ID) {
 			isStopped = false
 		}
-	})
+	}
 	return isStopped
 }
 
 func (group *ContainerGroup) AllContainersArePaused() bool {
 	isPaused := false
-	group.forEachContainer(func(container *Container) {
+	for _, container := range group.containers {
 		if group.dockerController.ContainerIsPaused(container.ID) {
 			isPaused = true
 		}
-	})
+	}
 	return isPaused
 }
 
 func (group *ContainerGroup) AllContainersAreRunning() bool {
 	isRunning := true
-	group.forEachContainer(func(container *Container) {
+	for _, container := range group.containers {
 		if !group.dockerController.ContainerIsRunning(container.ID) {
 			isRunning = false
 		}
-	})
-	return isRunning
-}
-
-func (group *ContainerGroup) forEachContainer(function func(*Container)) {
-	for _, container := range group.containers {
-		function(container)
 	}
+	return isRunning
 }
