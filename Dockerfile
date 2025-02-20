@@ -15,7 +15,7 @@ RUN go build .
 
 FROM alpine
 
-RUN apk --no-cache add ca-certificates gcompat
+RUN apk --no-cache add ca-certificates gcompat tzdata
 
 WORKDIR /usr/local/bin
 
